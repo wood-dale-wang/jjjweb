@@ -1,0 +1,18 @@
+{
+  "name": "jjjweb",
+  "version": "0.1.0",
+  "description": "js-json-js web package - backend-driven VDOM via WebSocket",
+  "type": "module",
+  "main": "src/server.mjs",
+  "scripts": {
+    "start": "node examples/counter.mjs"
+  },
+  "keywords": ["vdom","websocket","fastify","realtime","jjjweb"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "fastify": "^5.0.0",
+    "ws": "^8.13.0",
+    "ajv": "^8.12.0"
+  }
+}
