@@ -1,4 +1,4 @@
-import { serve, Page, div, h1, button } from '../src/server.mjs'
+import { jjjwebServer, Page, div, h1, button } from '../src/server.mjs'
 
 class CounterPage extends Page {
     constructor() {
@@ -9,7 +9,7 @@ class CounterPage extends Page {
     template() {
         const inc = button('+').on('click', () => {
             this.count++
-            this.rebuild()
+            // this.rebuild()
         })
         return div(
             h1(`Count = ${this.count}`),
@@ -18,4 +18,4 @@ class CounterPage extends Page {
     }
 }
 
-serve(CounterPage, { port: 3000 })
+let server=new jjjwebServer(CounterPage, { port: 3000 });
