@@ -8,12 +8,11 @@ import { Page, renderToJSON } from './Page.mjs'
 
 
 class jjjwebServer {
-    _pageInstance = undefined;//page存储
-    clients = new Set();//ws连接集合
     app = undefined;//服务器实例
+    pageServers = new Set();//pageServer实例集合
 
-    constructor(PageClass, opts = {}, logger = false) {
-        this.app = Fastify({ logger: logger })
+    constructor(PageClass, opts = {}) {
+        this.app = Fastify({ logger: (opts.logger == true) ? true : false })
 
         const publicDir = path.join(process.cwd(), 'public')
         this.app.get('/', async (req, reply) => {
@@ -29,11 +28,6 @@ class jjjwebServer {
         })
 
         // websocket will be handled by a standalone ws server attached to the HTTP server after listen
-
-        const page = new PageClass()
-        this._pageInstance = page
-        this.broadcast(page.rebuild())
-
         const port = opts.port || 3000
         this.app.listen({ port, host: '0.0.0.0' }).then(() => {
             // this.app.log.info(`jjjweb listening on http://localhost:${port}`)
@@ -54,41 +48,63 @@ class jjjwebServer {
                     socket.destroy()
                     return
                 }
-                console.log(">>>ws on")
+
                 wss.handleUpgrade(request, socket, head, (ws) => {
-                    this.clients.add(ws)//成功连接，加入组
-
-
-                    ws.on('message', (data) => {
-                        try {
-                            const msg = JSON.parse(data.toString())
-                            console.log(`>>>ws in >>${data.toString()}`)
-                            if (msg.type === 'event') {
-                                if (this._pageInstance) {
-                                    const node = this.findNodeById(this._pageInstance._root, msg.id)
-                                    if (node && node.events && node.events[msg.name]) {
-                                        // console.log(`>>>event do >>${node.id}`)
-                                        node.events[msg.name].call(this._pageInstance, msg)
-                                        this.broadcast(this._pageInstance.rebuild())
-                                    }
-                                }
-                            }
-                        } catch (e) { console.log(e); }
-                    })
-
-                    ws.on('close', () => this.clients.delete(ws))
-
-                    if (this._pageInstance && this._pageInstance._root) {
-                        const payload = { type: 'full', vdom: renderToJSON(this._pageInstance._root) }
-                        ws.send(JSON.stringify(payload))
-                    }
-                })
+                    this.pageServers.add(new pageServer(PageClass, ws, `${request.headers.host}`));
+                });
             })
         }).catch(err => {
             console.log(err);
             // app.log.error(err)
             process.exit(1)
         })
+    }
+}
+
+//对每一个页面都有一个pageServer类型
+class pageServer {
+    pageClass = undefined;
+    ws = undefined;
+    hostName = undefined;
+    constructor(PageClass, ws, hostName) {
+        this.pageClass = PageClass;
+        this.ws = ws;
+        this.hostName = hostName;
+
+        console.log(`>>>ws on for ${this.hostName}`);
+        const page = new PageClass()//TODO:变为基于链接的page创建
+        this.broadcast(page.rebuild())
+
+        ws.on('message', (data) => {
+            try {
+                const msg = JSON.parse(data.toString())
+                console.log(`>>> ws in [${this.hostName}] >> ${data.toString()}`)
+                if (msg.type === 'event') {
+                    if (page) {
+                        const node = this.findNodeById(page._root, msg.id)
+                        if (node && node.events && node.events[msg.name]) {
+                            // console.log(`>>>event do >>${node.id}`)
+                            node.events[msg.name].call(page, msg)
+                            this.broadcast(page.rebuild())
+                        }
+                    }
+                }
+            } catch (e) { console.log(e); }
+        })
+
+        ws.on('close', () => {
+            console.log(`>>> ws off for ${this.hostName}`);
+        });
+
+        if (page && page._root) {
+            const payload = { type: 'full', vdom: renderToJSON(page._root) }
+            ws.send(JSON.stringify(payload))
+        }
+    }
+
+    broadcast(msg) {
+        try { this.ws.send(msg); }
+        catch (e) { console.log(e); }
     }
 
     findNodeById(node, id) {
@@ -101,14 +117,7 @@ class jjjwebServer {
         }
         return null
     }
-
-    broadcast(msg) {
-        for (const ws of this.clients) {
-            try { ws.send(msg) } catch (e) { /* ignore */ }
-        }
-    }
 }
-
 
 // helpers
 function h(tag, ...children) {

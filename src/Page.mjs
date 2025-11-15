@@ -22,8 +22,14 @@ function renderToJSON(node) {
         id: node.id,
         tag: node.tag,
         props: node.props || {},
-        children: node.children.map(renderToJSON)
+        children: node.children.map(renderToJSON),
+        events: (node.events != null && node.events != undefined) ? (() => {
+            let reA = {};
+            for (let k in node.events)//将event上传，但是只传key值
+                reA[k] = 0;
+            return reA;
+        })() : {}
     }
 }
 
-export { Page ,renderToJSON}
+export { Page, renderToJSON }

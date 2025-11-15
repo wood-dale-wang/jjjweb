@@ -33,11 +33,15 @@ function createDomNode(v) {
     if (v.children) {
         for (const c of v.children) el.appendChild(createDomNode(c))
     }
-    // attach delegated click handler
-    el.addEventListener('click', (e) => {
-        const id = el.dataset.jjjid
-        ws.send(JSON.stringify({ type: 'event', id, name: 'click' }))
-    })
+    // 根据需要监听的event类型建立监听器
+    if (v && v.events) {
+        if ('click' in v.events) {
+            el.addEventListener('click', (e) => {
+                const id = el.dataset.jjjid
+                ws.send(JSON.stringify({ type: 'event', id, name: 'click' }))
+            });
+        }
+    }
     return el
 }
 
