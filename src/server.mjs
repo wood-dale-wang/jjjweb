@@ -9,7 +9,7 @@ import { Page, renderToJSON } from './Page.mjs'
 
 class jjjwebServer {
     app = undefined;//服务器实例
-    pageServers = new Set();//pageServer实例集合
+    cilentPageServers = new Set();//pageServer实例集合
 
     constructor(PageClass, opts = {}) {
         this.app = Fastify({ logger: (opts.logger == true) ? true : false })
@@ -50,7 +50,7 @@ class jjjwebServer {
                 }
 
                 wss.handleUpgrade(request, socket, head, (ws) => {
-                    this.pageServers.add(new pageServer(PageClass, ws, `${request.headers.host}`));
+                    this.cilentPageServers.add(new cilentPageServer(PageClass, ws, `${request.headers.host}`));
                 });
             })
         }).catch(err => {
@@ -62,7 +62,7 @@ class jjjwebServer {
 }
 
 //对每一个页面都有一个pageServer类型
-class pageServer {
+class cilentPageServer {
     pageClass = undefined;
     ws = undefined;
     hostName = undefined;
