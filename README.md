@@ -8,6 +8,29 @@ jjjweb是一个基于对象传递的http服务器。
 
 通过在后端模拟一个HTML-DOM树，并在前后端之间同步这颗HTML-DOM树（前端将其转化为真实的HTML-DOM树），实现了在后端通过后端语言的接口修改模拟的DOM树，就可以操作前端页面，而不必学习和书写HTML的语法。
 
+例如：
+
+```javascript
+class CounterPage extends Page {
+    constructor() {
+        super()
+        this.count = 0
+    }
+
+    template() {
+        const inc = button('+').on('click', () => {
+            this.count++
+        })
+        return div(
+            h1(`Count = ${this.count}`),
+            inc
+        )
+    }
+}
+```
+
+这段代码定义了一个页面，点击button时h1的内容自动改变。
+
 目前来说，倾向于前端只将事件传回，而不传回DOM树，以防被XSS攻击
 
 这是一个原型实现，展示如何通过后端对象构建虚拟 DOM 并通过 WebSocket 将其同步到浏览器。
@@ -31,7 +54,15 @@ jjjweb是一个基于对象传递的http服务器。
     npm start
     ```
 
+    或
+
+    ```sh
+    node ./examples/reverse.mjs
+    ```
+
 打开浏览器进入`localhost:3000`，你会看到一个计数器页面，点击`+`按钮，计数器增加1。
+
+使用`reverse`列子时，进入网页，在输入框中输入字符，回车或焦点离开后会在标题上显示其反序字符串。（目前有更新问题，更新页面后之前的输入和焦点会丢失）
 
 ~~且这是跨页面同步的，即打开多个页面，无论何时，看到的计数状态是一致的，且每个页面都有等效的操作功能。只要不关闭服务器，计算器的数量状态就不会丢失。~~
 

@@ -41,6 +41,18 @@ function createDomNode(v) {
                 ws.send(JSON.stringify({ type: 'event', id, name: 'click' }))
             });
         }
+        if ('change' in v.events) { // 表单元素的改变事件
+            el.addEventListener('change', (e) => {
+                const id = el.dataset.jjjid
+                ws.send(JSON.stringify({ type: 'event', id, name: 'change', value: el.value }))
+            });
+        }
+        if ('input' in v.events) { // 表单元素的改变事件(实时，基本用于input元素监听每一个字的输入)
+            el.addEventListener('input', (e) => {
+                const id = el.dataset.jjjid
+                ws.send(JSON.stringify({ type: 'event', id, name: 'input', value: el.value }))
+            });
+        }
     }
     return el
 }

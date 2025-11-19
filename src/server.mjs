@@ -61,7 +61,7 @@ class jjjwebServer {
     }
 }
 
-//对每一个页面都有一个pageServer类型
+//对每一个页面都有一个cilentPageServer类型
 class cilentPageServer {
     pageClass = undefined;
     ws = undefined;
@@ -72,7 +72,7 @@ class cilentPageServer {
         this.hostName = hostName;
 
         console.log(`>>>ws on for ${this.hostName}`);
-        const page = new PageClass()//TODO:变为基于链接的page创建
+        const page = new PageClass()
         this.broadcast(page.rebuild())
 
         ws.on('message', (data) => {
@@ -84,7 +84,7 @@ class cilentPageServer {
                         const node = this.findNodeById(page._root, msg.id)
                         if (node && node.events && node.events[msg.name]) {
                             // console.log(`>>>event do >>${node.id}`)
-                            node.events[msg.name].call(page, msg)
+                            node.events[msg.name].call(page, node, msg)
                             this.broadcast(page.rebuild())
                         }
                     }
@@ -130,5 +130,6 @@ function h(tag, ...children) {
 const div = (...c) => h('div', ...c)
 const h1 = (...c) => h('h1', ...c)
 const button = (text) => h('button', text)
+const input = (text) => { return new Element('input', { "placeholder": text }, null); };
 
-export { jjjwebServer, Page, Element, div, h1, button }
+export { jjjwebServer, Page, Element, div, h1, button, input }
